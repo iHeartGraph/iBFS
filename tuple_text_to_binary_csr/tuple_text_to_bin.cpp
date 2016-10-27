@@ -92,6 +92,7 @@ int main(int argc, char** argv){
 		head_offset++;
 		if(ss_head[head_offset]=='\n')
 		{
+			head_offset++;
 			skip_count++;
 			if(skip_count == skip_head) break;
 		}

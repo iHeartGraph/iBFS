@@ -1,58 +1,74 @@
-/*
- * Copyright 2016 The George Washington University
- * Written by Hang Liu 
- * Directed by Prof. Howie Huang
- *
- * https://www.seas.gwu.edu/~howie/
- * Contact: iheartgraph@gmail.com
- *
- * 
- * Please cite the following paper:
- * 
- * Hang Liu, H. Howie Huang and Yang Hu. 2016. iBFS: Concurrent Breadth-First Search on GPUs. Proceedings of the 2016 International Conference on Management of Data. ACM. 
- *
- * This file is part of iBFS.
- *
- * iBFS is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * iBFS is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with iBFS.  If not, see <http://www.gnu.org/licenses/>.
- */
+//Graph format: Json based format: [src_id, src_weigh,[[connected_ver_0, edge_weight],[connected_ver_1, edge_weight],[connected_ver_2, edge_weight]]]
+//Storage format: 
+//struct{
+//		int: src_ver
+//		Arr: [ver_0|ver_1|ver_2|...]
+//		Int: num_conn_ver
+//	}
+#ifndef	GRAPH_H
+#define	GRAPH_H
 
-#ifndef __GRAPH_H__
-#define __GRAPH_H__
-#include "util.h"
+#include <fstream>
+#include <string>
 #include <iostream>
-#include <stdio.h>
-#include <assert.h>
-#include <string.h>
-#include "wtime.h"
-class graph
-{
-	public:
-		index_t *beg_pos;
-		vertex_t *csr;
-		index_t vert_count;
-		index_t edge_count;
-		vertex_t *src_list;
-		index_t src_count;
+#include <sstream>
+#include <queue>
+#include "comm.h"
+#include "graph_reader.h"
 
-	public:
-		graph(){};
-		~graph(){};
-		graph(const char *beg_file, 
-				const char *csr_file,
-				index_t src_count);
+template 
+<	typename vertex_t, 
+	typename index_t, 
+	typename depth_t>
+class graph{
+	
+	//variable
+public:
+	vertex_t	*src_list;
+	index_t		src_count;
+	index_t 	edge_count;
+	index_t 	vert_count;
+	depth_t		*depth;
+	vertex_t	*parent;
+	
+	csr_graph ggraph;
+	tdata 		*gdata;
+	index_t		sml_shed;
+	index_t		lrg_shed;
+	index_t		gpu_id;
+	index_t		*gpu_ranger;
+	index_t 	num_agg_bfs;
+	index_t		sw_level;
+	
+	int world_sz, my_id;
+	//constructor
+public:
+	graph() {};
+	graph(	
+		graph_reader * g,
+			index_t			sw_level,
+		index_t			vert_count,
+		index_t			edge_count,
+		index_t			num_groups,
+		index_t			num_agg_bfs,
+		int world_sz, int my_id,
+		index_t			gpu_id,
+		index_t			sml_shed,
+		index_t			lrg_shed);
 
-		void gen_src();
-		void groupby();
+	//functions
+public:
+	int write_result();
+	int bfs_gpu_coalescing_mem();
+	int alloc_array();
+
 };
+
+#include "bfs_gpu_opt.cuh"
+#include "graph.cuh"
+#include "write_result.cuh"
+#include "allocator.cuh"
 #endif
+//included in 	main.cpp
+//		bfs_seq.cpp
+//		bfs.cu

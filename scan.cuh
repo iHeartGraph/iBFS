@@ -1,36 +1,4 @@
-/*
- * Copyright 2016 The George Washington University
- * Written by Hang Liu 
- * Directed by Prof. Howie Huang
- *
- * https://www.seas.gwu.edu/~howie/
- * Contact: iheartgraph@gmail.com
- *
- * 
- * Please cite the following paper:
- * 
- * Hang Liu, H. Howie Huang and Yang Hu. 2016. iBFS: Concurrent Breadth-First Search on GPUs. Proceedings of the 2016 International Conference on Management of Data. ACM. 
- *
- * This file is part of iBFS.
- *
- * iBFS is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * iBFS is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with iBFS.  If not, see <http://www.gnu.org/licenses/>.
- */
 
-#ifndef __SCAN_H__
-#define __SCAN_H__
-
-#include "util.h"
 #define NUM_BANKS           32
 #define LOG_NUM_BANKS       5
 
@@ -38,17 +6,17 @@
     ((n) >>LOG_NUM_BANKS)
 
 //USED FOR EXPANSION
-//template <typename index_t, typename index_t>
+//template <typename data_t, typename index_t>
 //__global__ void __pre_scan(	
-//								index_t 	*scan_ind_d,
-//								index_t	*adj_card_d,
-//								index_t 	*scan_out_d,
-//								index_t 	*blk_sum,
+//								data_t 	*scan_ind_d,
+//								data_t	*adj_card_d,
+//								data_t 	*scan_out_d,
+//								data_t 	*blk_sum,
 //								index_t num_dat,
 //								const index_t THD_NUM
 //		   				   )
 //{
-//	const index_t tile_sz	= THD_NUM<<1;
+//	const data_t tile_sz	= THD_NUM<<1;
 //	const index_t lane		= threadIdx.x<<1;
 //	index_t tid				= threadIdx.x+blockIdx.x*blockDim.x;
 //	index_t proc_tile		= blockIdx.x;
@@ -67,8 +35,8 @@
 //		num_tiles++;
 //
 //	//prefetching danger
-//	extern __shared__ index_t s_mem[];
-//	//__shared__ index_t s_mem[280];
+//	extern __shared__ data_t s_mem[];
+//	//__shared__ data_t s_mem[280];
 //	
 //	while(proc_tile < num_tiles)
 //	{
@@ -153,17 +121,17 @@
 //}
 //
 ////USED FOR lrg_scan
-//template <typename index_t, typename index_t>
+//template <typename data_t, typename index_t>
 //__global__ void __spine_scan(
-//								index_t 	*blk_sum, 
-//								index_t 	*grd_sum,
+//								data_t 	*blk_sum, 
+//								data_t 	*grd_sum,
 //								index_t num_dat,
 //								const index_t THD_NUM
 //		   				   )
 //{
-//	extern __shared__ index_t s_mem[];
+//	extern __shared__ data_t s_mem[];
 //
-//	const index_t tile_sz	= THD_NUM<<1;
+//	const data_t tile_sz	= THD_NUM<<1;
 //	const index_t lane		= threadIdx.x<<1;
 //	const index_t GRNTY= blockDim.x*gridDim.x;
 //
@@ -252,19 +220,19 @@
 ///////////////////////////////////////////////////////
 ////post_scan for large problem
 ////////////////////////////////////////////////////////
-//template<typename index_t, typename index_t>
+//template<typename data_t, typename index_t>
 //__global__ void __post_scan(
-//								index_t 	*scan_out_d,
-//								index_t 	*blk_sum,
-//								index_t 	*grd_sum,
+//								data_t 	*scan_out_d,
+//								data_t 	*blk_sum,
+//								data_t 	*grd_sum,
 //								index_t	num_dat,
 //								index_t num_grd,
 //								const index_t THD_NUM
 //							)
 //{
-//	extern __shared__ index_t s_mem[];
+//	extern __shared__ data_t s_mem[];
 //	
-//	const index_t tile_sz	= THD_NUM<<1;
+//	const data_t tile_sz	= THD_NUM<<1;
 //	const index_t lane		= threadIdx.x<<1;
 //	index_t tid				= threadIdx.x+blockIdx.x*blockDim.x;
 //	index_t offset			= 1;
@@ -366,18 +334,18 @@
 //
 //
 ////mid problem
-//template<typename index_t, typename index_t>
+//template<typename data_t, typename index_t>
 //__global__ void __post_scan(
-//								index_t 	*scan_out_d,
-//								index_t 	*blk_sum,
+//								data_t 	*scan_out_d,
+//								data_t 	*blk_sum,
 //								index_t	num_dat,
 //								index_t num_blk,
 //								const index_t THD_NUM
 //							)
 //{
-//	extern __shared__ index_t s_mem[];
+//	extern __shared__ data_t s_mem[];
 //	
-//	const index_t tile_sz	= THD_NUM<<1;
+//	const data_t tile_sz	= THD_NUM<<1;
 //	const index_t lane		= threadIdx.x<<1;
 //	index_t tid				= threadIdx.x+blockIdx.x*blockDim.x;
 //	index_t offset			= 1;
@@ -484,15 +452,16 @@
 
 
 //USED FOR INSPECTION
-__inline__ __global__ void __insp_pre_scan(	
-								index_t 	*scan_in_d, 
-								index_t 	*scan_out_d,
-								index_t 	*blk_sum,
+template <typename data_t, typename index_t>
+__global__ void __insp_pre_scan(	
+								data_t 	*scan_in_d, 
+								data_t 	*scan_out_d,
+								data_t 	*blk_sum,
 								index_t num_dat,
 								const index_t THD_NUM
 		   				   )
 {
-	const index_t tile_sz	= THD_NUM<<1;
+	const data_t tile_sz	= THD_NUM<<1;
 	const index_t lane		= threadIdx.x<<1;
 	index_t tid				= threadIdx.x+blockIdx.x*blockDim.x;
 	index_t offset			= 1;
@@ -504,8 +473,10 @@ __inline__ __global__ void __insp_pre_scan(
 	const index_t off_b		= CONFLICT_FREE_OFFSET(lane+1);
 	const index_t GRNTY = blockDim.x*gridDim.x;
 
+
 	//prefetching danger
-	extern __shared__ index_t s_mem[];
+	extern __shared__ data_t s_mem[];
+	
 	
 	while(tid_strip < num_dat)
 	{
@@ -566,18 +537,19 @@ __inline__ __global__ void __insp_pre_scan(
 ////////////////////////////////////////////////////////
 //post_scan for inspection
 ////////////////////////////////////////////////////////
-__inline__ __global__ void __insp_post_scan(
+template<typename data_t, typename index_t>
+__global__ void __insp_post_scan(
 								index_t	*ex_q_sz_d,
-								index_t 	*scan_out_d,
-								index_t 	*blk_sum,
+								data_t 	*scan_out_d,
+								data_t 	*blk_sum,
 								index_t	num_dat,
 								index_t num_blk,
 								const index_t THD_NUM
 							)
 {
-	extern __shared__ index_t s_mem[];
+	extern __shared__ data_t s_mem[];
 	
-	const index_t tile_sz	= THD_NUM<<1;
+	const data_t tile_sz	= THD_NUM<<1;
 	const index_t lane		= threadIdx.x<<1;
 	index_t tid				= threadIdx.x+blockIdx.x*blockDim.x;
 	index_t offset			= 1;
@@ -682,25 +654,25 @@ __inline__ __global__ void __insp_post_scan(
 	}
 }
 
-//template<typename index_t, typename index_t>
+//template<typename data_t, typename index_t>
 //__host__ void lrg_scan(
-//						index_t 			*scan_ind_d,
-//						index_t			*adj_card_d,
+//						data_t 			*scan_ind_d,
+//						data_t			*adj_card_d,
 //						//TODO requires scan_in_d to be 
 //						//		exact times of 
 //						//		THD_NUM*2
-//						index_t 			*scan_out_d,
+//						data_t 			*scan_out_d,
 //						const index_t	BLK_NUM,
 //						const index_t 	THD_NUM,
 //						cudaStream_t 	&stream
 //		   		   		)
 //{
 //	const index_t num_dat = ex_q_sz;
-//	index_t *blk_sum;
-//	index_t *grd_sum;
+//	data_t *blk_sum;
+//	data_t *grd_sum;
 //	index_t num_grd;
 //	
-//	const size_t sz = sizeof(index_t);
+//	const size_t sz = sizeof(data_t);
 //	const index_t padding	= 
 //					CONFLICT_FREE_OFFSET((THD_NUM<<1) -1);
 //	index_t num_blk	= num_dat/(THD_NUM<<1);
@@ -712,13 +684,13 @@ __inline__ __global__ void __insp_post_scan(
 //		num_grd ++;
 //
 //	cudaMalloc((void **)&blk_sum,
-//			sizeof(index_t)*num_blk);
+//			sizeof(data_t)*num_blk);
 //
 //	cudaMalloc((void **)&grd_sum,
-//			sizeof(index_t)*num_grd);
+//			sizeof(data_t)*num_grd);
 //if(num_grd>(THD_NUM<<1))
 //	std::cout<<"Out of Range\n";
-//	__pre_scan<index_t, index_t>
+//	__pre_scan<data_t, index_t>
 //	<<<BLK_NUM, THD_NUM, (padding+(THD_NUM<<1))*sz, stream>>>
 //	(
 //		scan_ind_d,
@@ -729,7 +701,7 @@ __inline__ __global__ void __insp_post_scan(
 //		THD_NUM
 //	);
 //	cudaThreadSynchronize();
-//	__spine_scan<index_t, index_t>
+//	__spine_scan<data_t, index_t>
 //	<<<BLK_NUM, THD_NUM, (padding+(THD_NUM<<1))*sz, stream>>>
 //	(
 //		blk_sum,
@@ -738,7 +710,7 @@ __inline__ __global__ void __insp_post_scan(
 //		THD_NUM
 //	);
 //	cudaThreadSynchronize();
-//	__post_scan<index_t, index_t>
+//	__post_scan<data_t, index_t>
 //	<<<BLK_NUM, THD_NUM, (padding+(THD_NUM<<1))*sz, stream>>>
 //	(
 //		scan_out_d,
@@ -751,19 +723,19 @@ __inline__ __global__ void __insp_post_scan(
 //	cudaThreadSynchronize();
 //}
 //
-//template<typename index_t, typename index_t>
+//template<typename data_t, typename index_t>
 //__host__ void mid_scan(
-//						index_t 			*scan_ind_d,
-//						index_t			*adj_card_d,
-//						index_t 			*scan_out_d,
+//						data_t 			*scan_ind_d,
+//						data_t			*adj_card_d,
+//						data_t 			*scan_out_d,
 //						const index_t	BLK_NUM,
 //						const index_t 	THD_NUM,
 //						cudaStream_t 	&stream
 //		   		   		)
 //{
 //	const index_t num_dat = ex_q_sz;
-//	index_t *blk_sum;
-//	const size_t sz = sizeof(index_t);
+//	data_t *blk_sum;
+//	const size_t sz = sizeof(data_t);
 //	const index_t padding	= 
 //					CONFLICT_FREE_OFFSET((THD_NUM<<1) -1);
 //	index_t num_blk	= num_dat/(THD_NUM<<1);
@@ -771,9 +743,9 @@ __inline__ __global__ void __insp_post_scan(
 //		num_blk ++;
 ////	std::cout<<"mid problem, num dat: "<<num_dat<<"\n";
 //	cudaMalloc((void **)&blk_sum,
-//			sizeof(index_t)*num_blk);
+//			sizeof(data_t)*num_blk);
 //	
-//	__pre_scan<index_t, index_t>
+//	__pre_scan<data_t, index_t>
 //	<<<BLK_NUM, THD_NUM, (padding+(THD_NUM<<1))*sz, stream>>>
 //	(
 //		scan_ind_d,
@@ -785,7 +757,7 @@ __inline__ __global__ void __insp_post_scan(
 //	);	
 //	
 //	cudaThreadSynchronize();
-//	__post_scan<index_t, index_t>
+//	__post_scan<data_t, index_t>
 //	<<<BLK_NUM, THD_NUM, (padding+(THD_NUM<<1))*sz, stream>>>
 //	(
 //		scan_out_d,
@@ -796,17 +768,17 @@ __inline__ __global__ void __insp_post_scan(
 //	);	
 //}
 //
-//template<typename index_t, typename index_t>
+//template<typename data_t, typename index_t>
 //__global__ void sml_scan(
-//						index_t 			*scan_ind_d,
-//						index_t 			*adj_card_d,
-//						index_t 			*scan_out_d,
+//						data_t 			*scan_ind_d,
+//						data_t 			*adj_card_d,
+//						data_t 			*scan_out_d,
 //						const index_t 	THD_NUM
 //		   		   		)
 //{
 //	
 //	const 	index_t	num_dat	= ex_q_sz_d;
-//	const index_t tile_sz	= THD_NUM<<1;
+//	const data_t tile_sz	= THD_NUM<<1;
 //	const index_t lane		= threadIdx.x<<1;
 //	index_t offset			= 1;
 //	index_t idct_a, idct_b;
@@ -818,7 +790,7 @@ __inline__ __global__ void __insp_post_scan(
 //	const index_t off_b		= CONFLICT_FREE_OFFSET(lane+1);
 //
 //	//prefetching danger
-//	extern __shared__ index_t s_mem[];
+//	extern __shared__ data_t s_mem[];
 //	
 //	if(lane < num_dat)
 //	{
@@ -889,12 +861,13 @@ __inline__ __global__ void __insp_post_scan(
 //For inspection, 
 //exact threads number of data to scan
 //---------------------------------------
-__inline__ __host__ void insp_scan(
-						index_t 			*scan_in_d,
+template<typename data_t, typename index_t>
+__host__ void insp_scan(
+						data_t 			*scan_in_d,
 						//TODO requires scan_in_d to be 
 						//		exact times of 
 						//		THD_NUM*2
-						index_t 			*scan_out_d,
+						data_t 			*scan_out_d,
 						const index_t	num_dat,
 						const index_t	BLK_NUM,
 						const index_t	THD_NUM,
@@ -902,13 +875,13 @@ __inline__ __host__ void insp_scan(
 						cudaStream_t 	&stream
 		   		   		)
 {
-	index_t *blk_sum;
-	const size_t sz = sizeof(index_t);
+	data_t *blk_sum;
+	const size_t sz = sizeof(data_t);
 	const index_t num_blk=THD_NUM<<1;
 	const index_t padding=CONFLICT_FREE_OFFSET((THD_NUM<<1)-1);
 	cudaMalloc((void **)&blk_sum,sz*num_blk);
 	
-	__insp_pre_scan
+	__insp_pre_scan<data_t, index_t>
 	<<<BLK_NUM, THD_NUM, (padding+(THD_NUM<<1))*sz, stream>>>
 	(
 		scan_in_d,
@@ -918,7 +891,7 @@ __inline__ __host__ void insp_scan(
 		THD_NUM
 	);	
 	cudaThreadSynchronize();
-	__insp_post_scan
+	__insp_post_scan<data_t, index_t>
 	<<<BLK_NUM, THD_NUM, (padding+(THD_NUM<<1))*sz, stream>>>
 	(
 		ex_q_sz_d,
@@ -929,5 +902,3 @@ __inline__ __host__ void insp_scan(
 		THD_NUM
 	);	
 }
-
-#endif

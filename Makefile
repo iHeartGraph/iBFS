@@ -1,35 +1,53 @@
-exe=gpu_ibfs.bin
+EXE=gpu-ibfs
 
-commflags=-O3 --compiler-options -Wall -Xptxas -v
-cucc= "$(shell which nvcc)"
+COMMFLAGS=-O3 --compiler-options -Wall -Xptxas -v
+CUCC= "$(shell which nvcc)"
 
-cuflags= -arch=sm_35  ${commflags}#-xptxas -dlcm=cg#disable l1 cache
-cuflags+= -ccbin=g++ -Xcompiler -fopenmp
+CUFLAGS= -arch=sm_35  ${COMMFLAGS}#-Xptxas -dlcm=cg#disable l1 cache
+CUFLAGS+= -ccbin=g++ -Xcompiler -fopenmp
 
-ifeq ($(debug), 1)
-	cuflags+= -DENABLE_MONITORING
+
+MPC    = "$(shell which mpicxx)"
+MPCFLAGS  = -Wall -I"$(shell dirname $(CUCC))/../include" -L"$(shell dirname $(CUCC))/../lib64" -lcudart -fopenmp
+
+
+ifeq ($(enable_monitor), 1)
+	CUFLAGS+= -DENABLE_MONITORING
 endif
 
 ifeq ($(enable_check), 1)
-	cuflags+= -DENABLE_CHECKING
+	CUFLAGS+= -DENABLE_CHECKING
 endif
 
 
-objs = $(patsubst %.cu,%.o,$(wildcard ./*.cu)) \
-				$(patsubst %.cpp,%.o,$(wildcard ./*.cpp))
+ifeq ($(enable_groupby), 1)
+	CUFLAGS+= -DGROUPBY
+endif
 
-deps = $(wildcard ./*.h) \
-			$(wildcard ./*.cuh) \
-				Makefile
 
-%.o:%.cu $(deps)
-	${cucc} -c ${cuflags} $< -o $@
+OBJS=  	main.o \
+		ibfs.o \
+		reporter.o 
 
-%.o:%.cpp $(deps)
-	${cucc} -c ${cuflags} $< -o $@
+DEPS= 	Makefile \
+		expander.cuh \
+		inspector.cuh \
+		comm.h \
+		graph.cuh \
+		bfs_gpu_opt.cuh \
+		wtime.h \
+		validate.h \
+		scan.cuh \
+		allocator.cuh 
 
-${exe}:${objs}
-	${cucc} ${objs} $(cuflags) -o ${exe}
+%.o:%.cpp $(DEPS)
+	${MPC} -c  ${MPCFLAGS} $< -o $@
+
+%.o:%.cu $(DEPS)
+	${CUCC} -c  ${CUFLAGS} $< -o $@
+
+${EXE}:${OBJS}
+	${MPC} ${OBJS} $(MPCFLAGS) -o ${EXE}
 
 clean:
-	rm -rf *.o ${exe}
+	rm -rf *.o ${EXE}
